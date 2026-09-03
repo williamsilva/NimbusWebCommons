@@ -1,59 +1,112 @@
 # NimbusWebCommons
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.1.0.
+Workspace Angular 21 (ng-packagr) que produz `@williamsilva/nimbus-web-commons` — biblioteca com o
+código de frontend que era idêntico, byte-a-byte (ou trivialmente divergente por app), entre
+`CardSyncWeb`, `NimbusFlowWeb` e `NimbusNovaxWeb`. Extraída em 2026-09-03 como Fase 1 (frontend) do
+mesmo levantamento de duplicação que gerou o `NimbusCommonsServer` (backend).
 
-## Development server
+## O que está aqui (v0.1.0)
 
-To start a local development server, run:
+- **`list-base/`** — `StatefulListPage`/`SelectableStatefulListPage` (a espinha dorsal de toda
+  tela de listagem), `table-filter-readers`, `base-list-page` (persistência de filtros em
+  localStorage), `cs-advanced-period-date-filter.component`.
+- **`directives/`** — `OverflowTooltipDirective`, `DateInputMaskDirective`.
+- **`theme/`** — `ThemeService`, parametrizado via `NIMBUS_THEME_CONFIG` (token `{ appId: string }`)
+  em vez do literal hardcoded de antes (`storageKey`/`eventKey`/`channelName` derivados do appId) -
+  cada app consumidor **precisa** prover o mesmo `appId` que já usava antes da extração, senão a
+  preferência de tema já salva no navegador de quem já usa o app é perdida.
+- **`enums/`** — `PeriodEnum` + `periodEnumLabel`/`normalizePeriodEnum`/`periodEnumSeverity`/
+  `allPeriodEnum`/`STATUS_CODE_MAP`. É um **enum de string, nominal** - cada app consumidor precisa
+  fazer de `@models/enums/period.enum.ts` um re-export puro desta lib (não uma cópia local com os
+  mesmos membros), senão vira um tipo incompatível com o que `StatefulListPage` espera.
+- **`ui/`** — só `tag-tone.type`/`tag-severity.type` (`CsTagTone`/`CsTagSeverity`), única dependência
+  real de `period.enum.ts` dentro de `shared/ui/*` - não trouxe `cs-tag`/`cs-badge` (que
+  `period.enum` não importa direto, só via barrel). Tipos estruturais, não nominais - o app
+  consumidor pode manter sua própria cópia local (usada por `cs-tag.component`/`cs-badge.component`,
+  que não fazem parte desta extração) sem nenhum conflito.
+- **`list-query/`** — `list-query.builder`, `primeng-lazy.mapper`, `list-query.types`.
+- **`filters-panel/`** — `FiltersPanelComponent` (+ `ActiveFilterItem`/`ActiveFilterGroup`).
+- **`utils/`** — `PersistedFilters`.
+- **`layout/footer/`** — `FooterComponent` (idêntico nos 3 apps).
+- **`i18n/`** — só a interface `I18nLike` (ver abaixo), não o `I18nService` em si.
 
-```bash
-ng serve
+### I18nLike — por que I18nService não foi extraído
+
+`StatefulListPage`/`period.enum.ts` dependiam de `I18nService`, que fica em cada app (ligado ao
+`ui-keys.ts` próprio, com centenas de chaves específicas de cada app — sem overlap estrutural
+garantido). Em vez de extrair o serviço, extraí só a interface mínima com a assinatura exata
+realmente usada (achada por leitura de código, não suposição):
+
+```ts
+interface I18nLike {
+  tUi(key: string, params?: Record<string, unknown> | string, fallback?: string): string;
+  tPrimeNg(key: string | null | undefined, fallback?: string): string;
+  getDateFormatByPeriod(period: PeriodEnum | null | undefined): string;
+  getDateLocale(): string;
+  getLocale(): string;
+  getCurrency(): string;
+}
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+O `I18nService` concreto de cada app satisfaz `I18nLike` **estruturalmente, sem nenhum
+`implements`** — TypeScript aceita porque `UiKey extends string` e métodos são checados
+bivariantemente (ao contrário de propriedades tipadas como função, que seriam checadas
+contravariantemente). Confirmado via `ng build` completo (AOT) nos 3 apps consumidores.
 
-## Code scaffolding
+## Fora de escopo (motivo documentado, candidato a uma próxima rodada)
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+**Layout kit** (`sidebar`/`topbar`/`layout.component`/`bottom-nav`) — decisão explícita do usuário
+de não mexer nesta rodada. Achado real na investigação: o `CardSyncWeb` diverge de verdade do
+`NimbusFlowWeb`/`NimbusNovaxWeb` (que são idênticos entre si) - os dois têm bottom-nav mobile +
+overlay de sidebar com `env(safe-area-inset-*)` (notch), o CardSync não tem nenhum dos dois. Não é
+"quase igual com 2 literais", são duas versões arquiteturalmente diferentes de `layout.component`.
+Caminho para uma extração futura:
+- `footer.component` já saiu (não dependia de nada específico de app).
+- `sidebar`/`topbar` são idênticos nos 3 apps, mas consomem `BRAND` (`core/brand/brand.ts`, nomes/
+  logos por app) e `APP_MENU` (`core/menu/menu.data.ts`, árvore de menu de negócio, 430-503 linhas
+  de diff entre apps) - virariam `@Input()`/`InjectionToken` consumidos pela lib.
+  `topbar.component.html` também tem um pequeno ajuste pendente: `routerLink`/`aria-label`/`alt` do
+  link de marca estão hardcoded por app, precisam vir de `BRAND` (`homeRoute` novo campo).
+- `layout.component`/`layout-state.service`/`bottom-nav` exigem uma decisão de produto antes de
+  extrair: ou o CardSync ganha bottom-nav/overlay mobile (não é refactor neutro), ou a lib mantém
+  duas variantes (`LayoutComponent`/`LayoutWithBottomNavComponent`), ou o CardSync fica de fora
+  dessa parte da lib permanentemente.
 
-```bash
-ng generate component component-name
+Também fora de escopo (não investigado ainda): módulo de autenticação BFF (`auth.service.ts`,
+`auth.guard.ts`, `csrf.*`), `core/auth/*` em geral - suspeita forte (mesmo padrão do `ThemeService`)
+de que os únicos diffs reais são literais de cookie/storage-key por app, mas não confirmado.
+
+## Como consumir
+
+`.npmrc` do app consumidor:
+
+```
+@williamsilva:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
 ```bash
-ng generate --help
+NODE_AUTH_TOKEN=<PAT com escopo read:packages> npm install @williamsilva/nimbus-web-commons
 ```
 
-## Building
+`app.config.ts` do app consumidor precisa prover `NIMBUS_THEME_CONFIG`:
 
-To build the project run:
-
-```bash
-ng build
+```ts
+{ provide: NIMBUS_THEME_CONFIG, useValue: { appId: 'nimbusflow' } }, // o appId que o app já usava
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+E `@models/enums/period.enum.ts` (ou onde quer que o app importe `PeriodEnum` hoje) precisa virar
+um re-export puro (não uma cópia):
 
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
+```ts
+export {
+  PeriodEnum, STATUS_CODE_MAP, normalizePeriodEnum, periodEnumSeverity, periodEnumLabel, allPeriodEnum,
+} from '@williamsilva/nimbus-web-commons';
+export type { PeriodInput } from '@williamsilva/nimbus-web-commons';
 ```
 
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
+## Publicar uma nova versão
 
 ```bash
-ng e2e
+NODE_AUTH_TOKEN=<PAT com escopo write:packages> npm run publish:lib
 ```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
