@@ -1,0 +1,18 @@
+{
+  "name": "@williamsilva/nimbus-web-commons",
+  "version": "0.1.0",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "peerDependencies": {
+    "@angular/common": "^21.1.0",
+    "@angular/core": "^21.1.0",
+    "@angular/router": "^21.1.0",
+    "primeng": "^21.1.1",
+    "rxjs": "~7.8.0"
+  },
+  "dependencies": {
+    "tslib": "^2.3.0"
+  },
+  "sideEffects": false
+}
