@@ -56,21 +56,28 @@ contravariantemente). Confirmado via `ng build` completo (AOT) nos 3 apps consum
 ## Fora de escopo (motivo documentado, candidato a uma próxima rodada)
 
 **Layout kit** (`sidebar`/`topbar`/`layout.component`/`bottom-nav`) — decisão explícita do usuário
-de não mexer nesta rodada. Achado real na investigação: o `CardSyncWeb` diverge de verdade do
-`NimbusFlowWeb`/`NimbusNovaxWeb` (que são idênticos entre si) - os dois têm bottom-nav mobile +
-overlay de sidebar com `env(safe-area-inset-*)` (notch), o CardSync não tem nenhum dos dois. Não é
-"quase igual com 2 literais", são duas versões arquiteturalmente diferentes de `layout.component`.
-Caminho para uma extração futura:
-- `footer.component` já saiu (não dependia de nada específico de app).
+de não mexer nesta rodada. Achado na investigação: o código de `layout.component`/
+`layout-state.service`/`bottom-nav` é idêntico entre `NimbusFlowWeb`/`NimbusNovaxWeb` e ausente no
+`CardSyncWeb` — **mas isso é acidente de histórico, não sinal de 2 produtos com a mesma
+necessidade**: o NimbusFlow é a única aplicação com "versão de aplicativo" (PWA/mobile) de verdade
+como decisão de produto (ver `project_geolocation_pwa_push_mobile_done`); o NimbusNovax herdou esse
+código ao ser clonado a partir do NimbusFlow, não por ter esse mesmo requisito de mobile. Ou seja: a
+divergência real de produto é **NimbusFlow (1 app) vs CardSync + NimbusNovax (2 apps sem versão de
+aplicativo)** — o oposto de "CardSync é o único diferente". Isso muda o cálculo de uma extração
+futura: extrair a variante "com bottom-nav" só faria sentido se mais apps ganharem uma versão de
+aplicativo de verdade; enquanto só o NimbusFlow tiver esse requisito, generalizar a lib pra
+suportá-lo é esforço sem ganho real (só ele usa). Caminho, se/quando isso mudar:
+- `footer.component` já saiu (não dependia de nada específico de app nem de mobile).
 - `sidebar`/`topbar` são idênticos nos 3 apps, mas consomem `BRAND` (`core/brand/brand.ts`, nomes/
   logos por app) e `APP_MENU` (`core/menu/menu.data.ts`, árvore de menu de negócio, 430-503 linhas
-  de diff entre apps) - virariam `@Input()`/`InjectionToken` consumidos pela lib.
+  de diff entre apps) - virariam `@Input()`/`InjectionToken` consumidos pela lib, independente da
+  parte de mobile/bottom-nav.
   `topbar.component.html` também tem um pequeno ajuste pendente: `routerLink`/`aria-label`/`alt` do
   link de marca estão hardcoded por app, precisam vir de `BRAND` (`homeRoute` novo campo).
-- `layout.component`/`layout-state.service`/`bottom-nav` exigem uma decisão de produto antes de
-  extrair: ou o CardSync ganha bottom-nav/overlay mobile (não é refactor neutro), ou a lib mantém
-  duas variantes (`LayoutComponent`/`LayoutWithBottomNavComponent`), ou o CardSync fica de fora
-  dessa parte da lib permanentemente.
+- `layout.component`/`layout-state.service`/`bottom-nav` (a parte "versão de aplicativo") só valem
+  a extração no dia em que outro app além do NimbusFlow precisar de fato de PWA/mobile - até lá,
+  ficam como estão (NimbusFlow com o próprio código, NimbusNovax carregando uma cópia vestigial que
+  não corresponde a nenhum requisito de produto seu, CardSync sem nada disso).
 
 Também fora de escopo (não investigado ainda): módulo de autenticação BFF (`auth.service.ts`,
 `auth.guard.ts`, `csrf.*`), `core/auth/*` em geral - suspeita forte (mesmo padrão do `ThemeService`)
