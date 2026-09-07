@@ -1,0 +1,113 @@
+<header class="topbar cs-glass" [class.has-bottom-nav]="bottomNavPresent">
+  <div class="left">
+    <button
+      pButton
+      type="button"
+      class="p-button-rounded p-button-text cs-sidebar-toggle"
+      [icon]="sidebarVisible() ? 'pi pi-angle-left' : 'pi pi-bars'"
+      [pTooltip]="
+        sidebarVisible()
+          ? i18n.tUi('topbar.sidebarHideTooltip')
+          : i18n.tUi('topbar.sidebarShowTooltip')
+      "
+      tooltipPosition="bottom"
+      (click)="toggleSidebar()"
+      [attr.aria-label]="i18n.tUi('topbar.sidebarToggleAria')"
+    ></button>
+
+    <div class="brand">
+      <a class="brand" [routerLink]="homeRoute" aria-label="{{ 'app.name' | translate }}">
+        <img [src]="brandMarkUrl" alt="{{ 'app.name' | translate }}" class="brand-logo-full" />
+
+        <div class="brand-text">
+          <div class="name">{{ i18n.tUi('topbar.brandName') }}</div>
+          <div class="sub">{{ i18n.tUi('topbar.brandSub') }}</div>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <div class="right">
+    <div
+      class="status"
+      tooltipPosition="bottom"
+      [attr.aria-label]="statusLabel()"
+      [attr.role]="sessionExpired() ? 'button' : null"
+      [attr.tabindex]="sessionExpired() ? 0 : null"
+      [class.expired]="sessionExpired()"
+      (click)="sessionExpired() && startLogin()"
+      (keydown.enter)="sessionExpired() && startLogin()"
+      (keydown.space)="sessionExpired() && startLogin()"
+      [pTooltip]="sessionExpired() ? statusTooltip() : undefined"
+      >
+      <span class="dot"></span>
+
+      <span class="status-text" [class.blink]="sessionExpired()">
+        {{ sessionExpired() ? i18n.tUi('topbar.sessionExpired') : i18n.tUi('topbar.online') }}
+      </span>
+
+      @if (!sessionExpired() && mmss(); as time) {
+        <span
+          class="session-timer"
+          tooltipPosition="bottom"
+          [ngClass]="sessionState()"
+          [pTooltip]="'topbar.sessionExpireTooltip' | translate"
+          >
+          <i class="pi pi-clock"></i>
+          {{ time }}
+        </span>
+      }
+    </div>
+
+    <button
+      pButton
+      type="button"
+      (click)="toggleTheme()"
+      class="p-button-rounded p-button-text"
+      [attr.aria-label]="i18n.tUi('topbar.themeToggleAria')"
+      [icon]="mode() === 'dark' ? 'pi pi-sun' : 'pi pi-moon'"
+    ></button>
+
+    <p-menu
+      #langMenu
+      [popup]="true"
+      appendTo="body"
+      id="topbar-lang-menu"
+      [model]="langMenuItems()"
+    ></p-menu>
+
+    <button
+      type="button"
+      aria-haspopup="true"
+      tooltipPosition="bottom"
+      aria-controls="topbar-lang-menu"
+      (click)="langMenu.toggle($event)"
+      class="cs-topbar-trigger cs-lang-trigger"
+      [attr.aria-label]="i18n.tUi('topbar.langAria')"
+      >
+      <span class="cs-trigger-badge">{{ currentLangLabel() }}</span>
+      <i class="pi pi-angle-down cs-trigger-chevron"></i>
+    </button>
+
+    <p-menu
+      #accountMenu
+      [popup]="true"
+      appendTo="body"
+      id="topbar-account-menu"
+      [model]="accountMenuItems()"
+    ></p-menu>
+
+    <button
+      type="button"
+      aria-haspopup="true"
+      tooltipPosition="bottom"
+      aria-controls="topbar-account-menu"
+      (click)="accountMenu.toggle($event)"
+      [attr.aria-label]="'menu.me' | translate"
+      class="cs-topbar-trigger cs-account-trigger"
+      >
+      <span class="cs-account-avatar">{{ initials() }}</span>
+      <i class="pi pi-angle-down cs-trigger-chevron"></i>
+    </button>
+  </div>
+</header>
