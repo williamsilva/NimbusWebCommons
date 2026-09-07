@@ -15,9 +15,15 @@ import { NIMBUS_TOPBAR_HOST, NimbusLang } from '../layout-host';
  * Extraído em 2026-09-07 (convergência de layout kit) - byte-idêntico entre CardSync/NimbusFlow/
  * NimbusNovax, mesma razão/mesmo padrão do SidebarComponent (ver NIMBUS_TOPBAR_HOST em
  * layout-host.ts). 2 divergências reais entre apps, resolvidas sem forçar unificação:
- * - texto/rota da marca ("CardSync"/`/dashboard` vs "NimbusFlow"/`/security`) - agora usa a mesma
- *   chave `app.name` que o SidebarComponent já usa (nunca era hardcoded lá) + `@Input() homeRoute`
- *   pra rota.
+ * - texto da marca ("CardSync"/"NimbusFlow"/"NimbusNovax") - agora usa a mesma chave `app.name`
+ *   que o SidebarComponent já usa (nunca era hardcoded lá).
+ *
+ * `homeRoute` default `'/'` de propósito (não uma rota "real" tipo `/dashboard`) - achado real
+ * (bug reportado pelo usuário em 2026-09-07): o valor extraído originalmente preservava o
+ * hardcoded de cada app (`/dashboard` no CardSync, `/security` no NimbusFlow/NimbusNovax), mas
+ * `/security` redireciona (ver security.routes.ts) pro primeiro filho, `/security/users` - não
+ * era essa a intenção do clique na marca (ir pro "início"). `/` já redireciona pra `dashboard` no
+ * `app.routes.ts` dos 3 apps, então funciona igual em todos sem precisar de override nenhum.
  * - CSS que esconde o botão de colapsar sidebar no mobile só quando existe bottom-nav (NimbusFlow/
  *   NimbusNovax) - agora é `@Input() bottomNavPresent`, CardSync (sem bottom-nav) simplesmente não
  *   passa esse input (default false).
@@ -35,8 +41,8 @@ export class TopbarComponent {
   private readonly router = inject(Router);
   private readonly theme = inject(ThemeService);
 
-  /** Rota do link da marca no topbar - diverge de verdade por app (ver javadoc da classe). */
-  @Input() homeRoute = '/dashboard';
+  /** Rota do link da marca no topbar - ver javadoc da classe pro porquê do default `'/'`. */
+  @Input() homeRoute = '/';
   /** Ver javadoc da classe - default false (CardSync, sem bottom-nav). */
   @Input() bottomNavPresent = false;
 
