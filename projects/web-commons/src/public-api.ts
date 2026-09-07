@@ -20,3 +20,7 @@ export * from './lib/list-base/stateful-list-page';
 export * from './lib/list-base/selectable-stateful-list-page';
 export * from './lib/list-base/cs-advanced-period-date-filter.component';
 export * from './lib/layout/footer/footer.component';
+export * from './lib/layout/menu.model';
+export * from './lib/layout/layout-host';
+export * from './lib/layout/sidebar/sidebar.component';
+export * from './lib/layout/topbar/topbar.component';
