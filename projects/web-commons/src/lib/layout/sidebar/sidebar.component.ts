@@ -74,7 +74,7 @@ export class SidebarComponent {
         ? this.filterMenuByPermissions(item.children)
         : undefined;
 
-      const isLeaf = !!item.route;
+      const isLeaf = !!item.route || !!item.externalUrl;
       const childrenVisible = (filteredChildren?.length ?? 0) > 0;
 
       const visible = isLeaf ? allowedSelf : allowedSelf && childrenVisible;

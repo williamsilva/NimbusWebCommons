@@ -23,7 +23,13 @@
           <span class="nav-label">{{ item.labelKey | translate }}</span>
         </a>
       }
-      @if (!item.route && item.children?.length) {
+      @if (!item.route && item.externalUrl) {
+        <a class="nav-item" [href]="item.externalUrl" target="_blank" rel="noopener noreferrer">
+          <i class="nav-icon" [ngClass]="item.icon"></i>
+          <span class="nav-label">{{ item.labelKey | translate }}</span>
+        </a>
+      }
+      @if (!item.route && !item.externalUrl && item.children?.length) {
         <div class="nav-group">
           <button
             type="button"
@@ -43,18 +49,26 @@
           @if (isExpanded(item)) {
             <div class="nav-children">
               @for (child of item.children; track trackByLabelKey($index, child)) {
-                <a
-                  class="nav-item child"
-                  [routerLink]="child.route!"
-                  routerLinkActive="active"
-                  [routerLinkActiveOptions]="{ exact: child.exact ?? false }"
-                  >
-                  <i
-                    class="nav-icon"
-                    [ngClass]="isActive(child) ? activeIcon(child) : child.icon"
-                  ></i>
-                  <span class="nav-label">{{ child.labelKey | translate }}</span>
-                </a>
+                @if (child.route) {
+                  <a
+                    class="nav-item child"
+                    [routerLink]="child.route"
+                    routerLinkActive="active"
+                    [routerLinkActiveOptions]="{ exact: child.exact ?? false }"
+                    >
+                    <i
+                      class="nav-icon"
+                      [ngClass]="isActive(child) ? activeIcon(child) : child.icon"
+                    ></i>
+                    <span class="nav-label">{{ child.labelKey | translate }}</span>
+                  </a>
+                }
+                @if (!child.route && child.externalUrl) {
+                  <a class="nav-item child" [href]="child.externalUrl" target="_blank" rel="noopener noreferrer">
+                    <i class="nav-icon" [ngClass]="child.icon"></i>
+                    <span class="nav-label">{{ child.labelKey | translate }}</span>
+                  </a>
+                }
               }
             </div>
           }

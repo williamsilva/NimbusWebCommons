@@ -11,6 +11,8 @@ export interface NimbusMenuItem {
   icon: string;
   activeIcon?: string;
   route?: string;
+  /** Link externo (abre em nova aba); mutuamente exclusivo com `route`. */
+  externalUrl?: string;
   children?: NimbusMenuItem[];
   exact?: boolean;
   permissions?: string | string[];
