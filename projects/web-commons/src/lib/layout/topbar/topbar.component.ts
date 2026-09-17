@@ -60,17 +60,17 @@ export class TopbarComponent {
     const current = this.lang();
     return [
       {
-        label: 'Português',
+        label: '🇧🇷 Português',
         disabled: current === 'pt-BR',
         command: () => this.onLangChange('pt-BR'),
       },
       {
-        label: 'English',
+        label: '🇺🇸 English',
         disabled: current === 'en',
         command: () => this.onLangChange('en'),
       },
       {
-        label: 'Español',
+        label: '🇪🇸 Español',
         disabled: current === 'es',
         command: () => this.onLangChange('es'),
       },
