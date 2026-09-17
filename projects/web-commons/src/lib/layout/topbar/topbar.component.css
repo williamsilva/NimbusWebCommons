@@ -299,6 +299,37 @@
   opacity: 0.58;
 }
 
+/* Bandeiras do menu de idioma - ::ng-deep (sem :host) de propósito: o p-menu do seletor de
+   idioma usa [appendTo]="body" (ver topbar.component.html), então o overlay é movido pra fora da
+   árvore DOM deste componente - um `:host ::ng-deep` normal não bateria (exige ancestralidade
+   DOM real). Emoji de bandeira (🇧🇷🇺🇸🇪🇸) foi tentado primeiro e descartado: Windows não
+   funde os 2 "regional indicator" numa bandeira só em várias combinações de fonte/navegador,
+   mostrando as 2 letras do código do país cruas (bug reportado 2026-09-17) - SVG inline via
+   background-image funciona igual em qualquer SO/navegador. */
+::ng-deep .cs-lang-flag {
+  display: inline-block;
+  width: 20px;
+  height: 14px;
+  border-radius: 2px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+  vertical-align: middle;
+}
+
+::ng-deep .cs-lang-flag-pt-br {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 14'%3E%3Crect width='20' height='14' fill='%23009739'/%3E%3Cpolygon points='10,2 18,7 10,12 2,7' fill='%23FEDD00'/%3E%3Ccircle cx='10' cy='7' r='3.2' fill='%23002776'/%3E%3C/svg%3E");
+}
+
+::ng-deep .cs-lang-flag-en {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 14'%3E%3Crect width='20' height='14' fill='%23fff'/%3E%3Crect y='0' width='20' height='1.4' fill='%23B22234'/%3E%3Crect y='2.8' width='20' height='1.4' fill='%23B22234'/%3E%3Crect y='5.6' width='20' height='1.4' fill='%23B22234'/%3E%3Crect y='8.4' width='20' height='1.4' fill='%23B22234'/%3E%3Crect y='11.2' width='20' height='1.4' fill='%23B22234'/%3E%3Crect width='8' height='7.6' fill='%233C3B6E'/%3E%3C/svg%3E");
+}
+
+::ng-deep .cs-lang-flag-es {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 14'%3E%3Crect width='20' height='14' fill='%23c60b1e'/%3E%3Crect y='3.5' width='20' height='7' fill='%23ffc400'/%3E%3C/svg%3E");
+}
+
 /* =======================
    RESPONSIVO
    ======================= */
