@@ -1,15 +1,24 @@
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
-import { Component, ChangeDetectionStrategy, computed, inject } from '@angular/core';
+import {
+  Component,
+  ChangeDetectionStrategy,
+  ViewChild,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 
+import { Menu, MenuModule } from 'primeng/menu';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
-import { ConfirmationService } from 'primeng/api';
+import { ConfirmationService, MenuItem } from 'primeng/api';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { NIMBUS_SIDEBAR_HOST, NimbusSidebarHost } from '../layout-host';
 import { NimbusMenuItem } from '../menu.model';
 import { filterMenuByPermissions } from '../menu-filter.util';
+import { toPrimeMenuItem } from '../menu-primeng-adapter.util';
 
 /**
  * Extraído em 2026-09-07 (convergência de layout kit) - byte-idêntico entre CardSync/NimbusFlow/
@@ -32,6 +41,7 @@ import { filterMenuByPermissions } from '../menu-filter.util';
     TooltipModule,
     TranslateModule,
     RouterLinkActive,
+    MenuModule,
   ],
 })
 export class SidebarComponent {
@@ -43,6 +53,14 @@ export class SidebarComponent {
   // do texto já traduzido, não da chave; TranslateService é peer dependency, sem divergência
   // entre apps (mesma ideia do FooterComponent, que usa o pipe `| translate` direto no template).
   private readonly translate = inject(TranslateService);
+
+  /** Popup único reaproveitado por todos os grupos no modo Slim (ver onGroupTriggerClick) - mesmo
+   *  padrão do seletor de idioma/conta do TopbarComponent (1 p-menu, [model] trocado antes de
+   *  abrir). `appendTo="body"` é essencial aqui: sem isso o flyout fica clipado pelo
+   *  `overflow: auto` do próprio `.nav` (achado real 2026-09-19 - a versão anterior usava CSS
+   *  puro com `position: absolute`, que ficava preso dentro da área de scroll do menu). */
+  @ViewChild('groupFlyoutMenu') private groupFlyoutMenu!: Menu;
+  readonly flyoutMenuItems = signal<MenuItem[]>([]);
 
   readonly brandMarkUrl = this.host.brandMarkUrl;
   readonly me = this.host.me;
@@ -73,6 +91,26 @@ export class SidebarComponent {
   toggleGroup(item: NimbusMenuItem): void {
     const key = this.itemKey(item);
     this.groupState[key] = !this.isExpanded(item);
+  }
+
+  /** No modo Slim, grupo não expande inline (não há espaço na coluna de 76px) - abre um popup
+   *  flyout com os filhos em vez disso. Nos demais modos, comportamento de sempre. Abaixo de
+   *  768px o CSS já reverte o Slim pro layout normal (ver sidebar.component.css) - checa o mesmo
+   *  breakpoint aqui pra não abrir o popup quando a tela está mostrando o layout expandido. */
+  onGroupTriggerClick(event: MouseEvent, item: NimbusMenuItem): void {
+    const isSlimDesktop = this.mode() === 'slim' && !window.matchMedia('(max-width: 768px)').matches;
+
+    if (isSlimDesktop) {
+      this.flyoutMenuItems.set(
+        (item.children ?? []).map((child) =>
+          toPrimeMenuItem(child, (key) => this.translate.instant(key)),
+        ),
+      );
+      this.groupFlyoutMenu.toggle(event);
+      return;
+    }
+
+    this.toggleGroup(item);
   }
 
   isExpanded(item: NimbusMenuItem): boolean {

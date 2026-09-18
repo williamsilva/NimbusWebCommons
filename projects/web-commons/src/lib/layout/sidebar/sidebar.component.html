@@ -47,7 +47,7 @@
             type="button"
             class="nav-group-title"
             [class.active]="hasActiveChild(item)"
-            (click)="toggleGroup(item)"
+            (click)="onGroupTriggerClick($event, item)"
             >
             <span class="nav-group-left">
               <i class="nav-icon" [ngClass]="item.icon"></i>
@@ -126,4 +126,6 @@
       ></button>
     </div>
   </div>
+
+  <p-menu #groupFlyoutMenu [popup]="true" appendTo="body" [model]="flyoutMenuItems()"></p-menu>
 </aside>

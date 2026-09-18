@@ -408,45 +408,13 @@
   justify-items: center;
 }
 
-/* Flyout: os filhos ficam sempre no DOM (ver sidebar.component.html), escondidos por padrão no
-   modo slim independente do estado de expand/collapse (".expanded" é ignorado aqui de propósito)
-   e revelados via hover/foco no próprio grupo - sem depender de nenhum estado JS novo. */
-.sidebar[data-mode='slim'] .nav-group {
-  position: relative;
-}
-
-.sidebar[data-mode='slim'] .nav-children {
+/* Flyout dos filhos: no modo slim, o grupo NUNCA expande inline (não há espaço na coluna de
+   76px, e um flyout via CSS position:absolute fica clipado pelo overflow:auto do .nav - achado
+   real 2026-09-19). Em vez disso, o clique abre um p-menu popup (appendTo="body", ver
+   onGroupTriggerClick/sidebar.component.html) - aqui só precisamos garantir que ".nav-children"
+   nunca apareça inline neste modo, mesmo quando isExpanded() é true (ex.: filho da rota ativa). */
+.sidebar[data-mode='slim'] .nav-children.expanded {
   display: none;
-  position: absolute;
-  left: calc(100% + 6px);
-  top: 0;
-  min-width: 200px;
-  z-index: 210;
-  padding: 6px;
-  border-radius: 12px;
-
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  backdrop-filter: blur(12px);
-  box-shadow: 0 18px 34px rgba(0, 0, 0, 0.14);
-}
-
-:host-context(.dark) .sidebar[data-mode='slim'] .nav-children {
-  background: rgba(17, 24, 39, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.sidebar[data-mode='slim'] .nav-group:hover .nav-children,
-.sidebar[data-mode='slim'] .nav-group:focus-within .nav-children {
-  display: flex;
-}
-
-.sidebar[data-mode='slim'] .nav-item.child {
-  padding-left: 8px;
-}
-
-.sidebar[data-mode='slim'] .nav-children .nav-label {
-  display: inline;
 }
 
 /* ===== Modo Drawer (sidebar como overlay, qualquer largura) ===== */

@@ -11,8 +11,8 @@ import { TranslateModule } from '@ngx-translate/core';
 
 import { ThemeService } from '../../theme/theme.service';
 import { NIMBUS_TOPBAR_HOST, NimbusLang, NimbusLayoutMode } from '../layout-host';
-import { NimbusMenuItem } from '../menu.model';
 import { filterMenuByPermissions } from '../menu-filter.util';
+import { toPrimeMenuItem } from '../menu-primeng-adapter.util';
 
 /**
  * Extraído em 2026-09-07 (convergência de layout kit) - byte-idêntico entre CardSync/NimbusFlow/
@@ -77,19 +77,8 @@ export class TopbarComponent {
   );
 
   readonly menubarItems = computed<MenuItem[]>(() =>
-    this.filteredMenu().map((item) => this.toMenubarItem(item)),
+    this.filteredMenu().map((item) => toPrimeMenuItem(item, (key) => this.i18n.tUi(key))),
   );
-
-  private toMenubarItem(item: NimbusMenuItem): MenuItem {
-    return {
-      label: this.i18n.tUi(item.labelKey),
-      icon: item.icon,
-      routerLink: item.route,
-      url: item.externalUrl,
-      target: item.externalUrl ? '_blank' : undefined,
-      items: item.children?.length ? item.children.map((child) => this.toMenubarItem(child)) : undefined,
-    };
-  }
 
   readonly layoutModeMenuItems = computed<MenuItem[]>(() => {
     const current = this.layoutMode();
