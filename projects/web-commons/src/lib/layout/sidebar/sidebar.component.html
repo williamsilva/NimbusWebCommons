@@ -21,6 +21,10 @@
           routerLinkActive="active"
           [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
           (click)="closeIfDrawer()"
+          showDelay="300"
+          appendTo="body"
+          tooltipPosition="right"
+          [pTooltip]="mode() === 'slim' ? (item.labelKey | translate) : undefined"
           >
           <i
             class="nav-icon"
@@ -36,6 +40,10 @@
           target="_blank"
           rel="noopener noreferrer"
           (click)="closeIfDrawer()"
+          showDelay="300"
+          appendTo="body"
+          tooltipPosition="right"
+          [pTooltip]="mode() === 'slim' ? (item.labelKey | translate) : undefined"
           >
           <i class="nav-icon" [ngClass]="item.icon"></i>
           <span class="nav-label">{{ item.labelKey | translate }}</span>
@@ -48,6 +56,10 @@
             class="nav-group-title"
             [class.active]="hasActiveChild(item)"
             (click)="onGroupTriggerClick($event, item)"
+            showDelay="300"
+            appendTo="body"
+            tooltipPosition="right"
+            [pTooltip]="mode() === 'slim' ? (item.labelKey | translate) : undefined"
             >
             <span class="nav-group-left">
               <i class="nav-icon" [ngClass]="item.icon"></i>
