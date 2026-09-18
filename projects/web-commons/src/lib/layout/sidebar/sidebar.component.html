@@ -1,4 +1,9 @@
-<aside class="sidebar cs-glass">
+@if (mode() === 'drawer') {
+  <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -- scrim decorativo (fecha ao clicar fora), não é conteúdo nem ação alcançável só por teclado -->
+  <div class="sidebar-backdrop" (click)="closeIfDrawer()"></div>
+}
+
+<aside class="sidebar cs-glass" [attr.data-mode]="mode()">
   <a class="sidebar-brand" [routerLink]="'/dashboard'" aria-label="{{ 'app.name' | translate }}">
     <img [src]="brandMarkUrl" alt="{{ 'app.name' | translate }}" class="sidebar-brand-logo" />
     <div class="sidebar-brand-text">
@@ -15,6 +20,7 @@
           [routerLink]="item.route"
           routerLinkActive="active"
           [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
+          (click)="closeIfDrawer()"
           >
           <i
             class="nav-icon"
@@ -24,7 +30,13 @@
         </a>
       }
       @if (!item.route && item.externalUrl) {
-        <a class="nav-item" [href]="item.externalUrl" target="_blank" rel="noopener noreferrer">
+        <a
+          class="nav-item"
+          [href]="item.externalUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          (click)="closeIfDrawer()"
+          >
           <i class="nav-icon" [ngClass]="item.icon"></i>
           <span class="nav-label">{{ item.labelKey | translate }}</span>
         </a>
@@ -46,32 +58,40 @@
               [ngClass]="isExpanded(item) ? 'pi-chevron-down' : 'pi-chevron-right'"
             ></i>
           </button>
-          @if (isExpanded(item)) {
-            <div class="nav-children">
-              @for (child of item.children; track trackByLabelKey($index, child)) {
-                @if (child.route) {
-                  <a
-                    class="nav-item child"
-                    [routerLink]="child.route"
-                    routerLinkActive="active"
-                    [routerLinkActiveOptions]="{ exact: child.exact ?? false }"
-                    >
-                    <i
-                      class="nav-icon"
-                      [ngClass]="isActive(child) ? activeIcon(child) : child.icon"
-                    ></i>
-                    <span class="nav-label">{{ child.labelKey | translate }}</span>
-                  </a>
-                }
-                @if (!child.route && child.externalUrl) {
-                  <a class="nav-item child" [href]="child.externalUrl" target="_blank" rel="noopener noreferrer">
-                    <i class="nav-icon" [ngClass]="child.icon"></i>
-                    <span class="nav-label">{{ child.labelKey | translate }}</span>
-                  </a>
-                }
+          <!-- Sempre no DOM (não só quando expandido) - no modo Slim o flyout precisa existir pra
+               aparecer via CSS :hover/:focus-within, sem depender do estado JS de expand/collapse
+               (ver sidebar.component.css). Nos demais modos, ".expanded" controla display:none. -->
+          <div class="nav-children" [class.expanded]="isExpanded(item)">
+            @for (child of item.children; track trackByLabelKey($index, child)) {
+              @if (child.route) {
+                <a
+                  class="nav-item child"
+                  [routerLink]="child.route"
+                  routerLinkActive="active"
+                  [routerLinkActiveOptions]="{ exact: child.exact ?? false }"
+                  (click)="closeIfDrawer()"
+                  >
+                  <i
+                    class="nav-icon"
+                    [ngClass]="isActive(child) ? activeIcon(child) : child.icon"
+                  ></i>
+                  <span class="nav-label">{{ child.labelKey | translate }}</span>
+                </a>
               }
-            </div>
-          }
+              @if (!child.route && child.externalUrl) {
+                <a
+                  class="nav-item child"
+                  [href]="child.externalUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  (click)="closeIfDrawer()"
+                  >
+                  <i class="nav-icon" [ngClass]="child.icon"></i>
+                  <span class="nav-label">{{ child.labelKey | translate }}</span>
+                </a>
+              }
+            }
+          </div>
         </div>
       }
     }

@@ -9,6 +9,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { NIMBUS_SIDEBAR_HOST, NimbusSidebarHost } from '../layout-host';
 import { NimbusMenuItem } from '../menu.model';
+import { filterMenuByPermissions } from '../menu-filter.util';
 
 /**
  * Extraído em 2026-09-07 (convergência de layout kit) - byte-idêntico entre CardSync/NimbusFlow/
@@ -52,7 +53,13 @@ export class SidebarComponent {
    */
   private readonly groupState: Record<string, boolean> = {};
 
-  readonly menu = computed(() => this.filterMenuByPermissions(this.host.menu));
+  readonly menu = computed(() =>
+    filterMenuByPermissions(this.host.menu, (required, requireAll) =>
+      this.host.canAccess(required, requireAll),
+    ),
+  );
+
+  readonly mode = computed(() => this.host.layoutMode());
 
   readonly initials = computed(() => {
     const me = this.me();
@@ -62,41 +69,6 @@ export class SidebarComponent {
     const b = parts.length > 1 ? parts[1][0] : base.length > 1 ? base[1] : 'S';
     return (a + b).toUpperCase();
   });
-
-  private filterMenuByPermissions(items: NimbusMenuItem[]): NimbusMenuItem[] {
-    const out: NimbusMenuItem[] = [];
-
-    for (const item of items) {
-      const required = this.resolvePermissions(item);
-      const allowedSelf = this.host.canAccess(required, item.requireAll ?? false);
-
-      const filteredChildren = item.children?.length
-        ? this.filterMenuByPermissions(item.children)
-        : undefined;
-
-      const isLeaf = !!item.route || !!item.externalUrl;
-      const childrenVisible = (filteredChildren?.length ?? 0) > 0;
-
-      const visible = isLeaf ? allowedSelf : allowedSelf && childrenVisible;
-      if (!visible) continue;
-
-      out.push(filteredChildren ? { ...item, children: filteredChildren } : item);
-    }
-
-    return out;
-  }
-
-  private resolvePermissions(item: NimbusMenuItem): string[] {
-    if (Array.isArray(item.permissions)) {
-      return item.permissions;
-    }
-
-    if (item.permissions) {
-      return [item.permissions];
-    }
-
-    return [];
-  }
 
   toggleGroup(item: NimbusMenuItem): void {
     const key = this.itemKey(item);
@@ -135,6 +107,14 @@ export class SidebarComponent {
 
   activeIcon(item: NimbusMenuItem): string {
     return item.activeIcon ?? 'pi pi-map-marker nav-icon-active-bounce text-blue-500';
+  }
+
+  /** Fecha a sidebar ao clicar no backdrop ou navegar, só faz sentido no modo Drawer (nos demais
+   *  modos a sidebar não é um overlay, então isso ficaria inerte de qualquer forma). */
+  closeIfDrawer(): void {
+    if (this.mode() === 'drawer') {
+      this.host.toggleSidebar();
+    }
   }
 
   private itemKey(item: NimbusMenuItem): string {

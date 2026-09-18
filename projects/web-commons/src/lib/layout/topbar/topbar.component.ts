@@ -4,12 +4,15 @@ import { Component, ChangeDetectionStrategy, Input, computed, inject } from '@an
 
 import { MenuItem } from 'primeng/api';
 import { MenuModule } from 'primeng/menu';
+import { MenubarModule } from 'primeng/menubar';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { TranslateModule } from '@ngx-translate/core';
 
 import { ThemeService } from '../../theme/theme.service';
-import { NIMBUS_TOPBAR_HOST, NimbusLang } from '../layout-host';
+import { NIMBUS_TOPBAR_HOST, NimbusLang, NimbusLayoutMode } from '../layout-host';
+import { NimbusMenuItem } from '../menu.model';
+import { filterMenuByPermissions } from '../menu-filter.util';
 
 /**
  * Extraído em 2026-09-07 (convergência de layout kit) - byte-idêntico entre CardSync/NimbusFlow/
@@ -34,7 +37,15 @@ import { NIMBUS_TOPBAR_HOST, NimbusLang } from '../layout-host';
   styleUrl: './topbar.component.css',
   templateUrl: './topbar.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterLink, MenuModule, ButtonModule, TooltipModule, TranslateModule],
+  imports: [
+    CommonModule,
+    RouterLink,
+    MenuModule,
+    MenubarModule,
+    ButtonModule,
+    TooltipModule,
+    TranslateModule,
+  ],
 })
 export class TopbarComponent {
   private readonly host = inject(NIMBUS_TOPBAR_HOST);
@@ -53,8 +64,53 @@ export class TopbarComponent {
   readonly sidebarVisible = this.host.sidebarVisible;
   readonly remainingSeconds = this.host.remainingSeconds;
   readonly sessionExpired = computed(() => this.host.isSessionExpired());
+  readonly layoutMode = this.host.layoutMode;
 
   readonly lang = this.i18n.appliedLang;
+
+  /** Menu horizontal (modo "horizontal") - mesmo filtro por permissão do SidebarComponent,
+   *  mapeado pro formato MenuItem[] que o p-menubar espera. */
+  readonly filteredMenu = computed(() =>
+    filterMenuByPermissions(this.host.menu, (required, requireAll) =>
+      this.host.canAccess(required, requireAll),
+    ),
+  );
+
+  readonly menubarItems = computed<MenuItem[]>(() =>
+    this.filteredMenu().map((item) => this.toMenubarItem(item)),
+  );
+
+  private toMenubarItem(item: NimbusMenuItem): MenuItem {
+    return {
+      label: this.i18n.tUi(item.labelKey),
+      icon: item.icon,
+      routerLink: item.route,
+      url: item.externalUrl,
+      target: item.externalUrl ? '_blank' : undefined,
+      items: item.children?.length ? item.children.map((child) => this.toMenubarItem(child)) : undefined,
+    };
+  }
+
+  readonly layoutModeMenuItems = computed<MenuItem[]>(() => {
+    const current = this.layoutMode();
+    const options: { mode: NimbusLayoutMode; icon: string; labelKey: string }[] = [
+      { mode: 'static', icon: 'pi pi-table', labelKey: 'topbar.layoutMode.static' },
+      { mode: 'slim', icon: 'pi pi-angle-double-right', labelKey: 'topbar.layoutMode.slim' },
+      { mode: 'horizontal', icon: 'pi pi-bars', labelKey: 'topbar.layoutMode.horizontal' },
+      { mode: 'drawer', icon: 'pi pi-clone', labelKey: 'topbar.layoutMode.drawer' },
+    ];
+
+    return options.map((opt) => ({
+      label: this.i18n.tUi(opt.labelKey),
+      icon: opt.icon,
+      disabled: current === opt.mode,
+      command: () => this.onLayoutModeChange(opt.mode),
+    }));
+  });
+
+  onLayoutModeChange(mode: NimbusLayoutMode): void {
+    this.host.setLayoutMode(mode);
+  }
 
   readonly langMenuItems = computed<MenuItem[]>(() => {
     const current = this.lang();

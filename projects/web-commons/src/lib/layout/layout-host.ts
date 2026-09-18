@@ -26,11 +26,24 @@ export interface NimbusSidebarHost {
   readonly me: Signal<NimbusIdentity | null | undefined>;
   readonly menu: NimbusMenuItem[];
   readonly brandMarkUrl: string;
+  readonly layoutMode: Signal<NimbusLayoutMode>;
   canAccess(required: string[], requireAll: boolean): boolean;
+  setLayoutMode(mode: NimbusLayoutMode): void;
+  /** Só usado no modo Drawer (fechar ao clicar no backdrop ou navegar) - nos demais modos a
+   *  sidebar nunca chama isto. Mesma duplicação intencional de `toggleSidebar` que já existe no
+   *  NimbusTopbarHost (ver comentário da interface abaixo). */
+  toggleSidebar(): void;
   logout(): void | Promise<void>;
 }
 
 export const NIMBUS_SIDEBAR_HOST = new InjectionToken<NimbusSidebarHost>('NIMBUS_SIDEBAR_HOST');
+
+/**
+ * Modos de layout estilo template Apollo (PrimeNG) - `static` é o comportamento atual (sidebar
+ * fixa mostrar/ocultar). Escolhido pelo usuário em tempo de execução, persistido por app (ver
+ * LayoutStateService de cada app) - por isso vive nos hosts como Signal, não como constante.
+ */
+export type NimbusLayoutMode = 'static' | 'slim' | 'horizontal' | 'drawer';
 
 export type NimbusLang = 'pt-BR' | 'en' | 'es';
 
@@ -55,12 +68,16 @@ export interface NimbusTopbarI18n extends I18nLike {
  */
 export interface NimbusTopbarHost {
   readonly me: Signal<NimbusIdentity | null | undefined>;
+  readonly menu: NimbusMenuItem[];
   readonly brandMarkUrl: string;
   readonly i18n: NimbusTopbarI18n;
   readonly sidebarVisible: Signal<boolean>;
   readonly remainingSeconds: Signal<number | null>;
+  readonly layoutMode: Signal<NimbusLayoutMode>;
+  canAccess(required: string[], requireAll: boolean): boolean;
   isSessionExpired(): boolean;
   toggleSidebar(): void;
+  setLayoutMode(mode: NimbusLayoutMode): void;
   startLogin(): void | Promise<void>;
   logout(): void | Promise<void>;
 }

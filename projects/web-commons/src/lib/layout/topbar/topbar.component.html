@@ -1,4 +1,8 @@
-<header class="topbar cs-glass" [class.has-bottom-nav]="bottomNavPresent">
+<header
+  class="topbar cs-glass"
+  [class.has-bottom-nav]="bottomNavPresent"
+  [class.has-menubar]="layoutMode() === 'horizontal'"
+  >
   <div class="left">
     <button
       pButton
@@ -69,6 +73,28 @@
     ></button>
 
     <p-menu
+      #layoutModeMenu
+      [popup]="true"
+      appendTo="body"
+      id="topbar-layout-mode-menu"
+      [model]="layoutModeMenuItems()"
+    ></p-menu>
+
+    <button
+      type="button"
+      aria-haspopup="true"
+      tooltipPosition="bottom"
+      aria-controls="topbar-layout-mode-menu"
+      (click)="layoutModeMenu.toggle($event)"
+      class="cs-topbar-trigger cs-layout-mode-trigger"
+      [pTooltip]="i18n.tUi('topbar.layoutMode.label')"
+      [attr.aria-label]="i18n.tUi('topbar.layoutMode.label')"
+      >
+      <i class="pi pi-sliders-h"></i>
+      <i class="pi pi-angle-down cs-trigger-chevron"></i>
+    </button>
+
+    <p-menu
       #langMenu
       [popup]="true"
       appendTo="body"
@@ -111,3 +137,9 @@
     </button>
   </div>
 </header>
+
+@if (layoutMode() === 'horizontal') {
+  <nav class="topbar-menubar cs-glass">
+    <p-menubar [model]="menubarItems()" [autoDisplay]="false"></p-menubar>
+  </nav>
+}

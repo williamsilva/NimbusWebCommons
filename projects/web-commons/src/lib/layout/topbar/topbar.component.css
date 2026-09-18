@@ -351,6 +351,34 @@
   }
 }
 
+/* =======================
+   SELETOR DE MODO DE LAYOUT
+   ======================= */
+
+.cs-layout-mode-trigger {
+  padding-inline: 0.5rem;
+}
+
+/* =======================
+   MENU HORIZONTAL (modo "horizontal")
+   ======================= */
+
+.topbar-menubar {
+  height: 44px;
+  margin: 4px 8px 0;
+  padding: 0 6px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+}
+
+.topbar-menubar ::ng-deep .p-menubar {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+
 @media (max-width: 640px) {
   .status-text {
     display: none;
