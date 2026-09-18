@@ -370,6 +370,14 @@
   border-radius: 14px;
   display: flex;
   align-items: center;
+
+  /* p-menubar não tem appendTo (diferente do p-menu/p-select usados no resto do app) - o
+     dropdown renderiza inline, sujeito à ordem normal de empilhamento. Sem isto, ficava
+     pintado ATRÁS do conteúdo da página (".content"/".content-inner" vêm depois no DOM e sem
+     isolamento nenhum, então "ganhavam" a pintura) - achado real 2026-09-19. 300 fica acima do
+     modo Drawer da sidebar (z-index 200, o maior já usado no app) de propósito. */
+  position: relative;
+  z-index: 300;
 }
 
 .topbar-menubar ::ng-deep .p-menubar {
